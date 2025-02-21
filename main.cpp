@@ -9,6 +9,8 @@ DigitalEncoder left_encoder(FEHIO::P0_1);
 FEHMotor right_motor(FEHMotor::Motor1,9.0);
 FEHMotor left_motor(FEHMotor::Motor0,9.0);
 
+
+//testing
 void move_forward(int percent, int counts) //using encoders
 {
     //Reset encoder counts
