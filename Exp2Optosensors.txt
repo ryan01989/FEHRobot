@@ -1,0 +1,113 @@
+#include <FEHLCD.h>
+#include <FEHIO.h>
+#include <FEHSD.h>
+#include <FEHSD.h>
+#include <FEHMotor.h>
+
+// Declarations for analog optosensors
+AnalogInputPin right_opto(FEHIO::P2_0);
+AnalogInputPin middle_opto(FEHIO::P2_1);
+AnalogInputPin left_opto(FEHIO::P2_2);
+
+FEHMotor drive_motor_left(FEHMotor::Motor0,9.0);
+FEHMotor drive_motor_right(FEHMotor::Motor1,9.0);
+
+enum LineStates {
+    MIDDLE,
+    RIGHT,
+    LEFT
+};
+int main() {
+    int state = MIDDLE; // Set the initial state
+    int x, y;
+    while(!LCD.Touch(&x,&y)); //Wait for screen to be pressed
+    while(LCD.Touch(&x,&y)); //Wait for screen to be unpressed
+
+    while (true) { // I will follow this line forever!
+        switch(state) {
+            // If I am in the middle of the line...
+            case MIDDLE:
+                drive_motor_left.SetPercent(15);
+                drive_motor_right.SetPercent(15);
+                /* Drive */
+                /* Code for if left sensor is on the line */
+                if (left_opto.Value() > 2.18) {
+                    state = LEFT; // update a new state
+                }
+                else if (right_opto.Value() > 2.08) {
+                    state = RIGHT; // update a new state
+                }
+                break;
+            // If the right sensor is on the line...
+            case RIGHT:
+                // Set motor powers for right turn
+                drive_motor_right.SetPercent(15);
+                drive_motor_left.SetPercent(0);
+                /* Drive */
+                if(middle_opto.Value() > 1.98) {
+                    state = MIDDLE;
+                }
+                else if(left_opto.Value() > 2.18) {
+                    state = LEFT;
+                }
+                break;
+            // If the left sensor is on the line...
+            case LEFT:
+                /* Mirror operation of RIGHT state */
+                drive_motor_left.SetPercent(15);
+                drive_motor_right.SetPercent(0);
+                if(middle_opto.Value() > 1.98) {
+                    state = MIDDLE;
+                }
+                else if(right_opto.Value() > 2.08) {
+                    state = RIGHT;
+                }
+                break;
+            default: // Error. Something is very wrong.
+                break;
+        }
+        Sleep(0.2);
+    }
+}
+
+// #include <FEHLCD.h>
+// #include <FEHIO.h>
+// #include <FEHSD.h>
+// #include <FEHSD.h>
+
+// // Declarations for analog optosensors
+// AnalogInputPin right_opto(FEHIO::P2_0);
+// AnalogInputPin middle_opto(FEHIO::P2_1);
+// AnalogInputPin left_opto(FEHIO::P2_2);
+
+// int main(void)
+// {
+//     float x, y; //for touch screen
+
+//     // Open output file and prepare for writing values to it
+//     FEHFile *ofptr = SD.FOpen("data.txt", "w");
+//     //Initialize the screen
+//     LCD.Clear(BLACK);
+//     LCD.SetFontColor(WHITE);
+
+//     LCD.WriteLine("Analog Optosensor Testing");
+//     LCD.WriteLine("Touch the screen");
+//     while(!LCD.Touch(&x,&y)); //Wait for screen to be pressed
+//     while(LCD.Touch(&x,&y)); //Wait for screen to be unpressed
+
+//     // -----------------LEFT----------------------
+//     while (true){
+//         LCD.WriteLine(left_opto.Value());
+//         LCD.WriteLine(middle_opto.Value());
+//         LCD.WriteLine(right_opto.Value());
+
+//         Sleep(1.5);
+//         LCD.Clear();
+//     }
+
+//     // Print end message to screen
+//     LCD.Clear(BLACK);
+//     LCD.WriteLine("Test Finished");
+
+//     return 0;
+// }
