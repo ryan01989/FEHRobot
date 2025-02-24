@@ -6,12 +6,12 @@
 //Declarations for encoders & motors
 DigitalEncoder right_encoder(FEHIO::P0_0);
 DigitalEncoder left_encoder(FEHIO::P0_1);
+DigitalInputPin frontBump(FEHIO::P0_2);
+DigitalInputPin backBump(FEHIO::P0_3);
 FEHMotor right_motor(FEHMotor::Motor1,9.0);
 FEHMotor left_motor(FEHMotor::Motor0,9.0);
 
-
-//testing
-void move_forward(int percent, int counts) //using encoders
+void moveForward(int percent, int counts) //using encoders
 {
     //Reset encoder counts
     right_encoder.ResetCounts();
@@ -30,6 +30,7 @@ void move_forward(int percent, int counts) //using encoders
     left_motor.Stop();
 }
 
+// 0 for left, 1 for right
 void turn(int percent, int counts, int dir) //using encoders
 {
     //Reset encoder counts
@@ -63,20 +64,25 @@ int main(void)
     LCD.Clear(BLACK);
     LCD.SetFontColor(WHITE);
 
-    LCD.WriteLine("Shaft Encoder Exploration Test");
+    LCD.WriteLine("Performance Test 1");
     LCD.WriteLine("Touch the screen");
     while(!LCD.Touch(&x,&y)); //Wait for screen to be pressed
     while(LCD.Touch(&x,&y)); //Wait for screen to be unpressed
 
-    move_forward(motor_percent, 567); // drive 14 inches
+    while (frontBump.Value()){
+        right_motor.SetPercent(motor_percent);
+        left_motor.SetPercent(motor_percent);
+    }
+    right_motor.Stop();
+    left_motor.Stop();
     Sleep(0.5);
-    turn(motor_percent, 220, 0); // turn 90 left
+    moveForward(-motor_percent, 500);
+    turn(motor_percent, 220, 1);
+    moveForward(motor_percent, 405);
     Sleep(0.5);
-    move_forward(motor_percent, 405); // drive 10 inches
-    Sleep(0.5);
-    turn(motor_percent, 220, 1); // turn 90 right
-    Sleep(0.5);
-    move_forward(motor_percent, 162); // drive 4 inches
+    moveForward(-motor_percent, 405);
+    
+
 
     // Sleep(2.0); //Wait for counts to stabilize
     // //Print out data
