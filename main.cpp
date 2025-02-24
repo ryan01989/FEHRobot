@@ -11,8 +11,10 @@ DigitalInputPin backBump(FEHIO::P0_3);
 FEHMotor right_motor(FEHMotor::Motor1,9.0);
 FEHMotor left_motor(FEHMotor::Motor0,9.0);
 
-void moveForward(int percent, int counts) //using encoders
-{
+void moveForward(int percent, int distance) //using encoders
+{   
+    int counts = 40.5 * distance;
+
     //Reset encoder counts
     right_encoder.ResetCounts();
     left_encoder.ResetCounts();
@@ -55,8 +57,8 @@ void turn(int percent, int counts, int dir) //using encoders
 
 int main(void)
 {
+    // 40.5 counts per inch
     int motor_percent = 22; //Input power level here
-    int expected_counts = 243; //Input theoretical counts here
 
     float x, y; //for touch screen
 
@@ -76,13 +78,12 @@ int main(void)
     right_motor.Stop();
     left_motor.Stop();
     Sleep(0.5);
-    moveForward(-motor_percent, 500);
+    moveForward(-motor_percent, 32);
     turn(motor_percent, 220, 1);
-    moveForward(motor_percent, 405);
+    moveForward(motor_percent, 16);
     Sleep(0.5);
-    moveForward(-motor_percent, 405);
+    moveForward(-motor_percent, 16);
     
-
 
     // Sleep(2.0); //Wait for counts to stabilize
     // //Print out data
