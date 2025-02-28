@@ -10,16 +10,22 @@ FEHMotor right_motor(FEHMotor::Motor1,9.0);
 FEHMotor left_motor(FEHMotor::Motor0,9.0);
 AnalogInputPin sensorFront(FEHIO::P1_0);
 
-//testing
-void move_forward(int percent, int counts) //using encoders
+// f for forward, b for backward
+void move(int percent, int counts, char dir) //using encoders
 {
     //Reset encoder counts
     right_encoder.ResetCounts();
     left_encoder.ResetCounts();
 
-    //Set both motors to desired percent
-    right_motor.SetPercent(percent+5);
-    left_motor.SetPercent(-percent);
+    if (dir == 'f'){
+        //Set both motors to desired percent
+        right_motor.SetPercent(percent+5);
+        left_motor.SetPercent(-percent);
+    } else if(dir == 'b'){
+        //Set both motors to desired percent
+        right_motor.SetPercent(-percent+5);
+        left_motor.SetPercent(percent);
+    }
 
     //While the average of the left and right encoder is less than counts,
     //keep running motors
@@ -40,36 +46,6 @@ void move_forward(int percent, int counts) //using encoders
     //Turn off motors
     right_motor.Stop();
     left_motor.Stop();
-}
-void move_backward(int percent, int counts) //using encoders
-{
-    //Reset encoder counts
-    right_encoder.ResetCounts();
-    left_encoder.ResetCounts();
-
-    //Set both motors to desired percent
-    right_motor.SetPercent(-percent+5);
-    left_motor.SetPercent(percent);
-
-    //While the average of the left and right encoder is less than counts,
-    //keep running motors
-    bool wallHit = false;
-    while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts && !wallHit){
-        LCD.WriteLine(sensorFront.Value());
-        Sleep(500);
-        if(sensorFront.Value()<=0.2){
-            //stop when a wall is hit
-            right_motor.SetPercent(0);
-            left_motor.SetPercent(0);
-            LCD.Clear(BLACK);
-            LCD.WriteLine("Wall hit");
-            wallHit=true;
-        }
-    }
-
-    //Turn off motors
-    right_motor.SetPercent(0);
-    left_motor.SetPercent(0);
 }
 
 void turn(int percent, int counts, int dir) //using encoders
@@ -112,16 +88,16 @@ int main(void)
     
     LCD.Clear(BLACK);
     LCD.WriteLine("Moving Forward");
-    move_forward(motor_percent, 30*perInch); // drive 14 inches and stop at wall
+    move(motor_percent, 30*perInch, 'f'); // drive 14 inches and stop at wall
     //wait for user to reposition robot 
     while(!LCD.Touch(&x,&y)); //Wait for screen to be pressed
     
     LCD.Clear(BLACK);
     LCD.WriteLine("Moving Forwards up ramp");
-    move_forward(motor_percent*1.33, ((25)*perInch)); // drive up ramp and stop
+    move(motor_percent*1.33, ((25)*perInch), 'f'); // drive up ramp and stop
     LCD.Clear(BLACK);
     LCD.WriteLine("Moving Backwards down ramp");
-    move_backward(motor_percent, ((25)*perInch)); // drive back down ramp and stop
+    move(motor_percent, ((25)*perInch), 'b'); // drive back down ramp and stop
 
     return 0;
 }
