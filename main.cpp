@@ -19,11 +19,11 @@ void move(int percent, int counts, char dir) //using encoders
 
     if (dir == 'f'){
         //Set both motors to desired percent
-        right_motor.SetPercent(percent+5);
+        right_motor.SetPercent(percent+1);
         left_motor.SetPercent(-percent);
     } else if(dir == 'b'){
         //Set both motors to desired percent
-        right_motor.SetPercent(-percent+5);
+        right_motor.SetPercent(-percent+1);
         left_motor.SetPercent(percent);
     }
 
@@ -94,10 +94,10 @@ int main(void)
     
     LCD.Clear(BLACK);
     LCD.WriteLine("Moving Forwards up ramp");
-    move(motor_percent*1.33, ((25)*perInch), 'f'); // drive up ramp and stop
+    move(motor_percent*1.33, ((20)*perInch), 'f'); // drive up ramp and stop
     LCD.Clear(BLACK);
     LCD.WriteLine("Moving Backwards down ramp");
-    move(motor_percent, ((25)*perInch), 'b'); // drive back down ramp and stop
+    move(motor_percent, ((20)*perInch), 'b'); // drive back down ramp and stop
 
     return 0;
 }
