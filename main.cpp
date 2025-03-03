@@ -6,8 +6,8 @@
 #include <FEHBattery.h>
 
 // Can change the following if one motor is slower than another.
-#define LEFT_MOTOR_CORRECTION_FACTOR 1
-#define RIGHT_MOTOR_CORRECTION_FACTOR 1.1
+#define LEFT_MOTOR_CORRECTION_FACTOR 1.1
+#define RIGHT_MOTOR_CORRECTION_FACTOR 1
 
 // Set a motor percentage of no more than 50% power
 #define MOTOR_PERCENTAGE 11.5 / (Battery.Voltage()) * 25
