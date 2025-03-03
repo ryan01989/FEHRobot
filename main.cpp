@@ -2,6 +2,14 @@
 #include <FEHIO.h>
 #include <FEHUtility.h>
 #include <FEHMotor.h>
+#include <FEHRCS.h>
+
+// Can change the following if one motor is slower than another.
+#define LEFT_MOTOR_CORRECTION_FACTOR 1
+#define RIGHT_MOTOR_CORRECTION_FACTOR 1
+
+// Set a motor percentage of no more than 50% power
+#define MOTOR_PERCENTAGE 25 /* TODO: Insert formula for motor percent based on controller battery power */
 
 //Declarations for encoders & motors
 DigitalEncoder right_encoder(FEHIO::P0_0);
@@ -9,44 +17,7 @@ DigitalEncoder left_encoder(FEHIO::P0_1);
 FEHMotor right_motor(FEHMotor::Motor1,9.0);
 FEHMotor left_motor(FEHMotor::Motor0,9.0);
 AnalogInputPin sensorFront(FEHIO::P1_0);
-
-// f for forward, b for backward
-void move(int percent, int counts, char dir) //using encoders
-{
-    //Reset encoder counts
-    right_encoder.ResetCounts();
-    left_encoder.ResetCounts();
-
-    if (dir == 'f'){
-        //Set both motors to desired percent
-        right_motor.SetPercent(percent+1);
-        left_motor.SetPercent(-percent);
-    } else if(dir == 'b'){
-        //Set both motors to desired percent
-        right_motor.SetPercent(-percent+1);
-        left_motor.SetPercent(percent);
-    }
-
-    //While the average of the left and right encoder is less than counts,
-    //keep running motors
-    bool wallHit = false;
-    while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts && !wallHit){
-        LCD.WriteLine(sensorFront.Value());
-        Sleep(500);
-        if(sensorFront.Value()<=0.2){
-            //stop when a wall is hit
-            right_motor.SetPercent(0);
-            left_motor.SetPercent(0);
-            LCD.Clear(BLACK);
-            LCD.WriteLine("Wall hit"); 
-            wallHit = true;
-        }
-    }
-
-    //Turn off motors
-    right_motor.Stop();
-    left_motor.Stop();
-}
+DigitalInputPin distanceSensor(FEHIO::P3_7);
 
 void turn(int percent, int counts, int dir) //using encoders
 {
@@ -70,6 +41,48 @@ void turn(int percent, int counts, int dir) //using encoders
     left_motor.Stop();
 }
 
+void driveUntilSensorDetected()
+{
+    // Drive backwards until an object is detected
+    left_motor.SetPercent(-1 * LEFT_MOTOR_CORRECTION_FACTOR * MOTOR_PERCENTAGE);
+    right_motor.SetPercent(-1 * RIGHT_MOTOR_CORRECTION_FACTOR * MOTOR_PERCENTAGE);
+
+    /* TODO: Drive until a wall is detected */
+
+    left_motor.Stop();
+    right_motor.Stop();
+}
+
+void drive(float distance, char dir)
+{
+    //Reset encoder counts
+    right_encoder.ResetCounts();
+    left_encoder.ResetCounts();
+
+    int counts = distance * 40.5;
+    
+    if (dir == 'f'){
+        //Set both motors to desired percent
+        right_motor.SetPercent(MOTOR_PERCENTAGE+RIGHT_MOTOR_CORRECTION_FACTOR);
+        left_motor.SetPercent(-MOTOR_PERCENTAGE);
+    } else if(dir == 'b'){
+        //Set both motors to desired percent
+        right_motor.SetPercent(-MOTOR_PERCENTAGE+RIGHT_MOTOR_CORRECTION_FACTOR);
+        left_motor.SetPercent(MOTOR_PERCENTAGE);
+    }
+
+    //While the average of the left and right encoder is less than counts,
+    //keep running motors
+    while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts ){
+        LCD.WriteLine(sensorFront.Value());
+        Sleep(500);
+    }
+
+    //Turn off motors
+    right_motor.Stop();
+    left_motor.Stop();
+}
+
 int main(void)
 {
     int motor_percent = 22; //Input power level here
@@ -82,22 +95,8 @@ int main(void)
     LCD.Clear(BLACK);
     LCD.SetFontColor(WHITE);
 
-    
-    LCD.WriteLine("Touch the screen");
-    while(!LCD.Touch(&x,&y)); //Wait for screen to be pressed
-    
-    LCD.Clear(BLACK);
-    LCD.WriteLine("Moving Forward");
-    move(motor_percent, 30*perInch, 'f'); // drive 14 inches and stop at wall
-    //wait for user to reposition robot 
-    while(!LCD.Touch(&x,&y)); //Wait for screen to be pressed
-    
-    LCD.Clear(BLACK);
-    LCD.WriteLine("Moving Forwards up ramp");
-    move(motor_percent*1.33, ((20)*perInch), 'f'); // drive up ramp and stop
-    LCD.Clear(BLACK);
-    LCD.WriteLine("Moving Backwards down ramp");
-    move(motor_percent, ((20)*perInch), 'b'); // drive back down ramp and stop
+    RCS.InitializeTouchMenu("0150F7IJN");
+    int lever = RCS.GetLever();
+    LCD.WriteLine(RCS.Time());
 
-    return 0;
 }
