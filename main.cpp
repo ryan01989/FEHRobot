@@ -6,7 +6,7 @@
 #include <FEHBattery.h>
 
 // Can change the following if one motor is slower than another.
-#define LEFT_MOTOR_CORRECTION_FACTOR 1.1
+#define LEFT_MOTOR_CORRECTION_FACTOR 1.03
 #define RIGHT_MOTOR_CORRECTION_FACTOR 1
 
 // Set a motor percentage of no more than 50% power
@@ -69,8 +69,8 @@ void drive(float distance, char dir)
         left_motor.SetPercent(MOTOR_PERCENTAGE * LEFT_MOTOR_CORRECTION_FACTOR);
     } else if(dir == 'b'){
         //Set both motors to desired percent
-        right_motor.SetPercent(MOTOR_PERCENTAGE * RIGHT_MOTOR_CORRECTION_FACTOR);
-        left_motor.SetPercent(MOTOR_PERCENTAGE * LEFT_MOTOR_CORRECTION_FACTOR);
+        right_motor.SetPercent(-MOTOR_PERCENTAGE * RIGHT_MOTOR_CORRECTION_FACTOR);
+        left_motor.SetPercent(-MOTOR_PERCENTAGE * LEFT_MOTOR_CORRECTION_FACTOR);
     }
 
     //While the average of the left and right encoder is less than counts,
@@ -80,6 +80,10 @@ void drive(float distance, char dir)
     //Turn off motors
     right_motor.Stop();
     left_motor.Stop();
+}
+
+void pressHumidifier(){
+    
 }
 
 int main(void)
@@ -97,14 +101,39 @@ int main(void)
 
     while(!LCD.Touch(&x, &y));
 
-    driveUntilSensorDetected();     // backwards until wall
-    drive(3.0, 'f');
+    // driveUntilSensorDetected();     // backwards until wall
+    // drive(1.5, 'f');
+    // Sleep(300);
+    // turn(MOTOR_PERCENTAGE, 232, 0); // turn right
+    // driveUntilSensorDetected();     // backwards until wall
+    // drive(1.5, 'f');
+    // Sleep(300);
+    // turn(MOTOR_PERCENTAGE, 232, 1); // turn left
+    // driveUntilSensorDetected();     // backwards until wall
+
+
+    drive(12, 'b');
+    LCD.WriteLine("Checking to see if right distance");
+    Sleep(500);
+    while (distanceSensor.Value()){
+        driveUntilSensorDetected();
+    }
+    drive(1.5, 'f');
     Sleep(300);
     turn(MOTOR_PERCENTAGE, 232, 0); // turn right
-    driveUntilSensorDetected();     // backwards until wall
-    drive(3.0, 'f');
+    drive(18, 'b');
+    Sleep(500);
+    while (distanceSensor.Value()){
+        driveUntilSensorDetected();
+    }
+    drive(1.5, 'f');
     Sleep(300);
     turn(MOTOR_PERCENTAGE, 232, 1); // turn left
-    driveUntilSensorDetected();     // backwards until wall
-
+    drive(7, 'b');
+    Sleep(500);
+    while (distanceSensor.Value()){
+        driveUntilSensorDetected();
+    } 
 }
+
+// 232
