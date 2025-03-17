@@ -9,7 +9,7 @@
 #define RIGHT_MOTOR_CORRECTION_FACTOR 1
 
 // Set a motor percentage of no more than 50% power
-#define MOTOR_PERCENTAGE 25 /* TODO: Insert formula for motor percent based on controller battery power */
+#define MOTOR_PERCENTAGE 50 /* TODO: Insert formula for motor percent based on controller battery power */
 
 //Declarations for encoders & motors
 DigitalEncoder right_encoder(FEHIO::P0_0);
@@ -82,21 +82,61 @@ void drive(float distance, char dir)
     right_motor.Stop();
     left_motor.Stop();
 }
+void driveVariableSpeed(float distance, char dir, float motor_percentage)
+{
+    //Reset encoder counts
+    right_encoder.ResetCounts();
+    left_encoder.ResetCounts();
 
+    int counts = distance * 40.5;
+    
+    if (dir == 'f'){
+        //Set both motors to desired percent
+        right_motor.SetPercent(motor_percentage+RIGHT_MOTOR_CORRECTION_FACTOR);
+        left_motor.SetPercent(-motor_percentage);
+    } else if(dir == 'b'){
+        //Set both motors to desired percent
+        right_motor.SetPercent(-motor_percentage+RIGHT_MOTOR_CORRECTION_FACTOR);
+        left_motor.SetPercent(motor_percentage);
+    }
+
+    //While the average of the left and right encoder is less than counts,
+    //keep running motors
+    while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts ){
+        LCD.WriteLine(sensorFront.Value());
+        Sleep(500);
+    }
+
+    //Turn off motors
+    right_motor.Stop();
+    left_motor.Stop();
+}
+void ramp(){
+    //assume robot is at front of ramp facing forward
+    //turn robot 180 degrees
+    turn(MOTOR_PERCENTAGE/2, 190*2, 1); //turn 180 
+    drive(18,'b');
+    driveVariableSpeed(0.5,'f',MOTOR_PERCENTAGE/2);
+    turn(MOTOR_PERCENTAGE/2, 203, 1); //turn 90, clockwise
+}
 int main(void)
 {
-    int motor_percent = 22; //Input power level here
-    int expected_counts = 243; //Input theoretical counts here
-    float perInch = 40.5;
-
-    float x, y; //for touch screen
-
-    //Initialize the screen
+    float x,y;
     LCD.Clear(BLACK);
     LCD.SetFontColor(WHITE);
+    while(!LCD.Touch(&x, &y));
+    LCD.WriteLine("Touch detected, Going up Ramp");
+    ramp();
+    drive(8.5, 'f');
+    driveVariableSpeed(1,'b',MOTOR_PERCENTAGE/2);
+    turn(MOTOR_PERCENTAGE/2, 213, 1); //turn 90, clockwise
+    driveVariableSpeed(2,'f',MOTOR_PERCENTAGE/2);
+    turn(MOTOR_PERCENTAGE/2, 213, 0); //turn 90, clockwise
+    driveVariableSpeed(3,'f',MOTOR_PERCENTAGE/2);
+    turn(MOTOR_PERCENTAGE/2, 213, 0); //turn 90, clockwise
+    driveVariableSpeed(1,'f',MOTOR_PERCENTAGE/2);
+    turn(MOTOR_PERCENTAGE/2, 213, 1); //turn 90, clockwise
+    driveVariableSpeed(5, 'b', MOTOR_PERCENTAGE);
 
-    RCS.InitializeTouchMenu("0150F7IJN");
-    int lever = RCS.GetLever();
-    LCD.WriteLine(RCS.Time());
 
 }
