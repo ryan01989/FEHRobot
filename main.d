@@ -3,7 +3,7 @@
  Libraries/FEHUtility.h Startup/derivative.h Libraries/LCDColors.h \
  Libraries/FEHIO.h Drivers/adc16.h Libraries/FEHMotor.h \
  Libraries/FEHRCS.h Drivers/FEHXBee.h Libraries/FEHBattery.h \
- Libraries/FEHIO.h
+ Libraries/FEHIO.h Libraries/FEHServo.h
 Libraries/FEHLCD.h:
 Drivers/spi.h:
 ../fehproteusfirmware/Startup/derivative.h:
@@ -18,3 +18,4 @@ Libraries/FEHRCS.h:
 Drivers/FEHXBee.h:
 Libraries/FEHBattery.h:
 Libraries/FEHIO.h:
+Libraries/FEHServo.h:
