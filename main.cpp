@@ -3,24 +3,34 @@
 #include <FEHUtility.h>
 #include <FEHMotor.h>
 #include <FEHRCS.h>
+#include <FEHServo.h>
+#include <FEHBattery.h>
 
 // Can change the following if one motor is slower than another.
 #define LEFT_MOTOR_CORRECTION_FACTOR 1
 #define RIGHT_MOTOR_CORRECTION_FACTOR 1
 
 // Set a motor percentage of no more than 50% power
-#define MOTOR_PERCENTAGE 50 /* TODO: Insert formula for motor percent based on controller battery power */
-
+#define MOTOR_PERCENTAGE 25 /* TODO: Insert formula for motor percent based on controller battery power */
+#define COUNTS_PER_INCH 32.5 // TODO: Calibrate this value
 //Declarations for encoders & motors
-DigitalEncoder right_encoder(FEHIO::P0_0);
+DigitalEncoder right_encoder(FEHIO::P0_7);
 DigitalEncoder left_encoder(FEHIO::P0_1);
 FEHMotor right_motor(FEHMotor::Motor1,9.0);
 FEHMotor left_motor(FEHMotor::Motor0,9.0);
-AnalogInputPin sensorFront(FEHIO::P1_0);
+//optosensor
+AnalogInputPin optoLeft(FEHIO::P1_0);
+AnalogInputPin optoMiddle(FEHIO::P1_1);
+AnalogInputPin optoRight(FEHIO::P1_2);
+//cds
 DigitalInputPin cdsCell(FEHIO::P3_0); // Light sensor
+//servos
+FEHServo servo(FEHServo::Servo3); // Servo for composter
+FEHMotor forkliftServo(FEHMotor::Motor2,9.0); // Forklift hacked servo
 
-void turn(int percent, int counts, int dir) //using encoders
+void turn(int percent, int degrees, int dir) //using encoders
 {
+    int counts = degrees*(COUNTS_PER_INCH/360);
     //Reset encoder counts
     right_encoder.ResetCounts();
     left_encoder.ResetCounts();
@@ -40,25 +50,34 @@ void turn(int percent, int counts, int dir) //using encoders
     right_motor.Stop();
     left_motor.Stop();
 }
-void turnOnlyLeftMotor(int percent, int counts, int dir) //using encoders
+void turnOnlyOneMotor(int percent, int degrees, char dir, char motor) //using encoders
 {
+    //get encoder counts
+    int counts = degrees*(COUNTS_PER_INCH/360);
     //Reset encoder counts
-  
+    right_encoder.ResetCounts();
     left_encoder.ResetCounts();
     //Set both motors to desired percent
-    if (dir == 0) {
-       
-        left_motor.SetPercent(percent);
-    } else {
-        
-        left_motor.SetPercent(-percent);
+    if(motor == 'l')
+    {
+        if (dir == 'l') {
+            left_motor.SetPercent(percent);
+        } else if(dir== 'r'){ 
+            left_motor.SetPercent(-percent);
+        }
+        while((left_encoder.Counts()) < counts);
     }
-    // While the average of the left and right encoder is less than counts,
-    // keep running motors
-    while((left_encoder.Counts()) < counts);
-
-    //Turn off motors
     
+    if (motor== 'r') {
+        if (dir == 'l') {
+            right_motor.SetPercent(percent);
+        } else if(dir== 'r'){
+            right_motor.SetPercent(-percent);
+        }
+        while((right_encoder.Counts()) < counts);
+    }
+    //Turn off motors
+    right_motor.Stop();
     left_motor.Stop();
 }
 
@@ -80,7 +99,7 @@ void drive(float distance, char dir)
     right_encoder.ResetCounts();
     left_encoder.ResetCounts();
 
-    int counts = distance * 40.5;
+    int counts = distance * COUNTS_PER_INCH;
     
     if (dir == 'f'){
         //Set both motors to desired percent
@@ -95,7 +114,7 @@ void drive(float distance, char dir)
     //While the average of the left and right encoder is less than counts,
     //keep running motors
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts ){
-        LCD.WriteLine(sensorFront.Value());
+       
         Sleep(500);
     }
 
@@ -109,7 +128,7 @@ void driveVariableSpeedALittleRight(float distance, char dir, float motor_percen
     right_encoder.ResetCounts();
     left_encoder.ResetCounts();
 
-    int counts = distance * 40.5;
+    int counts = distance * COUNTS_PER_INCH;
     
     if (dir == 'f'){
         //Set both motors to desired percent
@@ -124,7 +143,7 @@ void driveVariableSpeedALittleRight(float distance, char dir, float motor_percen
     //While the average of the left and right encoder is less than counts,
     //keep running motors
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts ){
-        LCD.WriteLine(sensorFront.Value());
+       
         Sleep(500);
     }
 
@@ -138,7 +157,7 @@ void driveVariableSpeed(float distance, char dir, float motor_percentage)
     right_encoder.ResetCounts();
     left_encoder.ResetCounts();
 
-    int counts = distance * 40.5;
+    int counts = distance * COUNTS_PER_INCH;
     
     if (dir == 'f'){
         //Set both motors to desired percent
@@ -153,7 +172,6 @@ void driveVariableSpeed(float distance, char dir, float motor_percentage)
     //While the average of the left and right encoder is less than counts,
     //keep running motors
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts ){
-        LCD.WriteLine(sensorFront.Value());
         Sleep(500);
     }
 
@@ -170,61 +188,54 @@ void ramp(){
     driveVariableSpeed(0.5,'f', MOTOR_PERCENTAGE/2);
     turn(MOTOR_PERCENTAGE/2, 93, 1); //turn 90, clockwise
 }
-int main(void)
-{
-    float x,y;
-
+void startSequence(){
+    //clear screen
     LCD.Clear(BLACK);
     LCD.SetFontColor(WHITE);
+    //set servo parameters
+    servo.SetMin(800);
+    servo.SetMax(2200);
+    servo.SetDegree(0);
     //start on light
     LCD.WriteLine("Starting");
+    
+    LCD.WriteAt("Battery: ", 160, 220);
+    LCD.WriteAt(((Battery.Voltage()/11.5)*100),270,220);
+
+
     while(cdsCell.Value() > 0.3){
         Sleep(0.5);
         LCD.WriteLine(cdsCell.Value());
     }
+}
+int main(void)
+{
+
     
-    turn(MOTOR_PERCENTAGE/2, 50, 1); //turn a little right
+    //wait for light
+         //startSequence();
+   //go to composter
+   //pick up apples
+   //go to ramp
+   //go up ramp
+         //ramp();
+   //drop off apples
+   //center over second horizontal line
+   //turn 30 degrees left
+   //drive 19 in
+   //turn 120 right
+
+   //fertilizer
+   //go 6 in back
+   //turn 135 left
+
+   // humidifier
+   //go to window loc
+   //open window
+   //go to ramp
+   //return to start
+    
    
-    Sleep(1.0);
-    //drive to front of ramp
-    LCD.Clear(BLACK);
-    LCD.WriteLine("Going to Ramp");
-    drive(4, 'f');
-    Sleep(0.5);
-
-    LCD.Clear(BLACK);
-    LCD.WriteLine("Going up Ramp");
-    ramp();
-
-    LCD.Clear(BLACK);
-    LCD.WriteLine("Opening Window");
-    //drive forward and smack
-    driveVariableSpeed(4, 'f', MOTOR_PERCENTAGE/2);
-    Sleep(0.5);
-    driveVariableSpeedALittleRight(4.6, 'f', MOTOR_PERCENTAGE/2);
-    Sleep(0.5);
-    turn(MOTOR_PERCENTAGE/2, 5,1);
-    driveVariableSpeed(3, 'f', MOTOR_PERCENTAGE/2);
-    Sleep(1.0);
-    //turn to go around
-    driveVariableSpeed(0.5,'b',MOTOR_PERCENTAGE/2);
-    turn(MOTOR_PERCENTAGE/2, 25, 1); //turn a little right
-    driveVariableSpeed(1.7,'f',MOTOR_PERCENTAGE/2);
-    turn(MOTOR_PERCENTAGE/2, 40, 0); //turn a little left
-    Sleep(0.5);
-    //bring window back
-    drive(4.5, 'b');
-
-
-    // driveVariableSpeed(1,'b',MOTOR_PERCENTAGE/2);
-    // turn(MOTOR_PERCENTAGE/2, 213, 1); //turn 90, clockwise
-    // driveVariableSpeed(2,'f',MOTOR_PERCENTAGE/2);
-    // turn(MOTOR_PERCENTAGE/2, 213, 0); //turn 90, clockwise
-    // driveVariableSpeed(3,'f',MOTOR_PERCENTAGE/2);
-    // turn(MOTOR_PERCENTAGE/2, 213, 0); //turn 90, clockwise
-    // driveVariableSpeed(1,'f',MOTOR_PERCENTAGE/2);
-    // turn(MOTOR_PERCENTAGE/2, 213, 1); //turn 90, clockwise
-    // driveVariableSpeed(5, 'b', MOTOR_PERCENTAGE);
-
+    
 
 }
