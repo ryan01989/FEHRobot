@@ -19,13 +19,13 @@ DigitalEncoder left_encoder(FEHIO::P0_1);
 FEHMotor right_motor(FEHMotor::Motor1,9.0);
 FEHMotor left_motor(FEHMotor::Motor0,9.0);
 FEHMotor servoFork(FEHMotor::Motor2, 9.0);
-FEHServo servo(FEHServo::Servo0);
+FEHServo servo(FEHServo::Servo3);
 AnalogInputPin sensorFront(FEHIO::P1_0);
 DigitalInputPin distanceSensor(FEHIO::P3_7);
 AnalogInputPin cdsCell(FEHIO::P3_0);
-AnalogInputPin right_opto(FEHIO::P0_3);
-AnalogInputPin middle_opto(FEHIO::P0_5);
-AnalogInputPin left_opto(FEHIO::P0_7);
+AnalogInputPin right_opto(FEHIO::P1_0);
+AnalogInputPin middle_opto(FEHIO::P1_2);
+AnalogInputPin left_opto(FEHIO::P1_4);
 
 enum LineStates {
     MIDDLE,
@@ -50,7 +50,30 @@ void turn(int counts, int dir) //using encoders
     }
     // While the average of the left and right encoder is less than counts,
     // keep running motors
-    while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
+    while(left_encoder.Counts() < counts);
+
+    //Turn off motors
+    right_motor.Stop();
+    left_motor.Stop();
+}
+
+// 0 for left, 1 for right
+void turnOneOnly(int counts, int dir) //using encoders
+{
+    //Reset encoder counts
+    right_encoder.ResetCounts();
+    left_encoder.ResetCounts();
+    //Set both motors to desired percent
+    if (dir == 0) {
+        right_motor.SetPercent(MOTOR_PERCENTAGE);
+        while((right_encoder.Counts()) < counts);
+    } else {
+        left_motor.SetPercent(-MOTOR_PERCENTAGE);
+        while((left_encoder.Counts()) < counts);
+    }
+    // While the average of the left and right encoder is less than counts,
+    // keep running motors
+    
 
     //Turn off motors
     right_motor.Stop();
@@ -79,7 +102,7 @@ void drive(float distance, char dir)
     
     if (dir == 'f'){
         //Set both motors to desired percent
-        right_motor.SetPercent(MOTOR_PERCENTAGE * RIGHT_MOTOR_CORRECTION_FACTOR);
+        right_motor.SetPercent(MOTOR_PERCENTAGE * 0.98);
         left_motor.SetPercent(-MOTOR_PERCENTAGE * LEFT_MOTOR_CORRECTION_FACTOR);
     } else if(dir == 'b'){
         //Set both motors to desired percent
@@ -153,37 +176,37 @@ void driveUsingLine(float distance){
                 right_motor.SetPercent(15);
                 /* Drive */
                 /* Code for if left sensor is on the line */
-                if (left_opto.Value() < 2.9) {
+                if (left_opto.Value() < 2.5 && left_opto.Value() > 2.4) {
                     state = LEFT; // update a new state
                 }
-                else if (right_opto.Value() < 2.9) {
-                    state = RIGHT; // update a new state
-                }
+                // else if (right_opto.Value() < 2.9) {
+                //     state = RIGHT; // update a new state
+                // }
                 break;
             // If the right sensor is on the line...
-            case RIGHT:
-                // Set motor powers for right turn
-                left_motor.SetPercent(15);
-                right_motor.SetPercent(0);
-                /* Drive */
-                if(middle_opto.Value() < 2.9) {
-                    state = MIDDLE;
-                }
-                else if(left_opto.Value() < 2.9) {
-                    state = LEFT;
-                }
-                break;
+            // case RIGHT:
+            //     // Set motor powers for right turn
+            //     left_motor.SetPercent(15);
+            //     right_motor.SetPercent(0);
+            //     /* Drive */
+            //     if(middle_opto.Value() < 2.9) {
+            //         state = MIDDLE;
+            //     }
+            //     else if(left_opto.Value() < 2.9) {
+            //         state = LEFT;
+            //     }
+            //     break;
             // If the left sensor is on the line...
             case LEFT:
                 /* Mirror operation of RIGHT state */
-                left_motor.SetPercent(15);
+                left_motor.SetPercent(-15);
                 right_motor.SetPercent(0);
-                if(middle_opto.Value() < 2.9) {
+                if(middle_opto.Value() < 3.05 && middle_opto.Value() > 2.95) {
                     state = MIDDLE;
                 }
-                else if(right_opto.Value() < 2.9) {
-                    state = RIGHT;
-                }
+                // else if(right_opto.Value() < 2.9) {
+                //     state = RIGHT;
+                // }
                 break;
             default: // Error. Something is very wrong.
                 break;
@@ -254,20 +277,20 @@ void flipLever(int l){
         Sleep(1.0);
         driveUsingLine(3.5);
         // INSERT MOVE SERVO DOWN
-        servo.SetPercent(-15);
+        servoFork.SetPercent(-15);
         Sleep(2.0);
-        servo.Stop();
+        servoFork.Stop();
         drive(2, 'b');
-        // INSERT MOVE SERVO MAX DOWN
-        servo.SetPercent(-15);
+        // INSERT MOVE servoFork MAX DOWN
+        servoFork.SetPercent(-15);
         Sleep(1.0);
-        servo.Stop();
+        servoFork.Stop();
         Sleep(5.0);
         drive(2, 'f');
-        // INSERT MOVE SERVO UP
-        servo.SetPercent(15);
+        // INSERT MOVE servoFork UP
+        servoFork.SetPercent(15);
         Sleep(2.0);
-        servo.Stop();
+        servoFork.Stop();
     } else if (l == 2){
         turn(100, 1);  // turn right
         Sleep(0.5);
@@ -278,41 +301,41 @@ void flipLever(int l){
         drive(3, 'f');
         Sleep(1.0);
         driveUsingLine(3.5);
-        // INSERT MOVE SERVO DOWN
-        servo.SetPercent(-15);
+        // INSERT MOVE servoFork DOWN
+        servoFork.SetPercent(-15);
         Sleep(2.0);
-        servo.Stop();
+        servoFork.Stop();
         drive(2, 'b');
-        // INSERT MOVE SERVO MAX DOWN
-        servo.SetPercent(-15);
+        // INSERT MOVE servoFork MAX DOWN
+        servoFork.SetPercent(-15);
         Sleep(1.0);
-        servo.Stop();
+        servoFork.Stop();
         Sleep(5.0);
         drive(2, 'f');
-        // INSERT MOVE SERVO UP
-        servo.SetPercent(15);
+        // INSERT MOVE servoFork UP
+        servoFork.SetPercent(15);
         Sleep(2.0);
-        servo.Stop();
+        servoFork.Stop();
     } else {
         drive(3, 'f');
         Sleep(1.0);
         driveUsingLine(3.5);
-        // INSERT MOVE SERVO DOWN
-        servo.SetPercent(-15);
+        // INSERT MOVE servoFork DOWN
+        servoFork.SetPercent(-15);
         Sleep(2.0);
-        servo.Stop();
+        servoFork.Stop();
         drive(2, 'b');
-        // INSERT MOVE SERVO MAX DOWN
-        servo.SetPercent(-15);
+        // INSERT MOVE servoFork MAX DOWN
+        servoFork.SetPercent(-15);
         Sleep(1.0);
-        servo.Stop();
+        servoFork.Stop();
 
         Sleep(5.0);
         drive(2, 'f');
-        // INSERT MOVE SERVO UP
-        servo.SetPercent(15);
+        // INSERT MOVE servoFork UP
+        servoFork.SetPercent(15);
         Sleep(2.0);
-        servo.Stop();
+        servoFork.Stop();
     }
 }
 
@@ -322,7 +345,7 @@ void appleBucket(char opr){
         Sleep(1.0);
         driveUsingLine(3);
         Sleep(0.5);
-        // MOVE SERVO DOWN a little
+        // MOVE servoFork DOWN a little
         Sleep(1.0);
         drive(2, 'b');
         Sleep(1.0);
@@ -331,84 +354,177 @@ void appleBucket(char opr){
     }
 }
 
+void spinServo(int n){
+    
+    servo.SetDegree(n);
+    
+}
+
+void humidifier(){
+    Sleep(0.5);
+    drive(3.5, 'f');
+    Sleep(1.0);
+    LCD.WriteLine("1st in");
+    spinServo(180);
+    Sleep(2.0);
+    drive(1.5, 'b');
+    Sleep(2.0);
+    LCD.WriteLine("1st out");
+    spinServo(0);
+    Sleep(2.0);
+    drive(1.5, 'f');
+    Sleep(2.0);
+    LCD.WriteLine("2nd in");
+    spinServo(180);
+    Sleep(2.0);
+    drive(1.5, 'b');
+    Sleep(2.0);
+    LCD.WriteLine("2nd out");
+    spinServo(0);
+    Sleep(2.0);
+    drive(1.5, 'f');
+    Sleep(2.0);
+    LCD.WriteLine("3rd in");
+    spinServo(180);
+    Sleep(2.0);
+    drive(1.5, 'b');
+    Sleep(2.0);
+    LCD.WriteLine("3rd out");
+    spinServo(0);
+    Sleep(2.0);
+    drive(1.5, 'f');
+    Sleep(2.0);
+    LCD.WriteLine("4th in");
+    spinServo(150);
+    Sleep(2.5);
+
+    // LCD.WriteLine("Going Back now.");
+    // LCD.WriteLine("1st in");
+    // spinServo(0);
+    // Sleep(2.0);
+    // drive(1.5, 'b');
+    // Sleep(2.0);
+    // LCD.WriteLine("1st out");
+    // spinServo(180);
+    // Sleep(2.0);
+    // drive(1.5, 'f');
+    // Sleep(2.0);
+    // LCD.WriteLine("2nd in");
+    // spinServo(0);
+    // Sleep(2.0);
+    // drive(1.5, 'b');
+    // Sleep(2.0);
+    // LCD.WriteLine("2nd out");
+    // spinServo(180);
+    // Sleep(2.0);
+    // drive(1.5, 'f');
+    // Sleep(2.0);
+    // LCD.WriteLine("3rd in");
+    // spinServo(0);
+    // Sleep(2.0);
+    // drive(1.5, 'b');
+    // Sleep(2.0);
+    // LCD.WriteLine("3rd out");
+    // spinServo(180);
+    // Sleep(2.0);
+    // drive(1.5, 'f');
+    // Sleep(2.0);
+    // LCD.WriteLine("4th in");
+    // spinServo(0);
+    // drive(1.5, 'b');
+    // Sleep(2.0);
+    // LCD.WriteLine("4th out");
+    // spinServo(180);
+    // Sleep(2.0);
+    // drive(1.5, 'f');
+    // Sleep(2.0);
+    // LCD.WriteLine("5th in");
+    // spinServo(0);
+}
+
 int main(void)
 {
     float x, y; //for touch screen
-    // while (true) { // Infinite loop to keep checking for screen presses
-    //     while (!LCD.Touch(&x, &y)); // Wait for screen to be pressed
-    //     while (LCD.Touch(&x, &y));  // Wait for screen to be unpressed
-    //     left_encoder.ResetCounts();
-    //     right_encoder.ResetCounts();
-    //     LCD.WriteLine(left_encoder.Counts());
-    //     LCD.WriteLine(right_encoder.Counts());
+    int l = RCS.GetLever();
 
-    //     int l = RCS.GetLever();
-    
-    //     turn(100, 0); // Perform the turn when the screen is pressed
+    LCD.WriteLine("Milestone 5");
+    LCD.WriteLine("Touch the screen");
+    // while(!LCD.Touch(&x,&y)); //Wait for screen to be pressed
+    // while(LCD.Touch(&x,&y)); //Wait for screen to be unpressed
+
+    // ******* MILESTONE 5 **********
+
+    // while (true){
+    //     LCD.WriteLine(left_opto.Value());
+    //     LCD.WriteLine(middle_opto.Value());
+    //     LCD.WriteLine(right_opto.Value());
+
+    //     Sleep(1.0);
     //     LCD.Clear();
+    
     // }
 
-    LCD.WriteLine("Analog Optosensor Testing");
-    LCD.WriteLine("Touch the screen");
-    while(!LCD.Touch(&x,&y)); //Wait for screen to be pressed
-    while(LCD.Touch(&x,&y)); //Wait for screen to be unpressed
+    // driveUsingLine(3);
+    
+    // servo.TouchCalibrate();
+    servo.SetMin(822);
+    servo.SetMax(2208);
+
+    // while(cdsCell.Value() > 0.4);
+
+    right_motor.SetPercent(20);
+    Sleep(1.8);
+    right_motor.Stop();
+
+    drive(2.1, 'f');
+
+    left_motor.SetPercent(-20);
+    Sleep(0.9);
+    left_motor.Stop();
+
+    // drive(0.5, 'f');
+    Sleep(1.0);
+    drive(3.7, 'b');
+    turn(100, 1);
+    drive(7.5, 'f');
+    turn(95, 0);
+    Sleep(3.0);
+
+    driveUsingLine(3);
 
     
-    // servo.SetPercent(50);
-    // Sleep(2.0);
-    // servo.Stop();
-    // drive(2, 'b');
-    // // INSERT MOVE SERVO MAX DOWN
-    // servo.SetPercent(-15);
-    // Sleep(1.0);
-    // servo.Stop();
 
-    // // Print end message to screen
-    LCD.Clear(BLACK);
-    LCD.WriteLine("Test Finished");
+
+    // // humidifier first
+    // humidifier();
+
+    // // back out and drive to apple bucket
+
+    // // pick up apple bucket
+    // appleBucket('p');
+
+    // // back up and allign with ramp
+
+    // // drive up ramp
+
+    // // drop off apple bucket
+    // appleBucket('d');
+
+    // // back up and drive to levers
     
+    // // flip lever
+    // flipLever(l);
 
+    // // back up and drive to humidifier button
 
-    while (true){
-        LCD.WriteLine(left_opto.Value());
-        LCD.WriteLine(middle_opto.Value());
-        LCD.WriteLine(right_opto.Value());
+    // // press humidifier button
+    // humidifier();
 
-        Sleep(1.0);
-        LCD.Clear();
-    }
-    
+    // Sleep(2.5);
 
-    // turn(101, 1);
-
-
-    // turn(101, 1);     // turn right
-    // drive(2, 'f');
-    // driveUsingLine(2);
-    // Sleep(1.0);
-    // drive(2.5, 'b');
-    // // OPTIONAL - ram into wall to straighten
-    // turn(100, 1);
-    // Sleep(0.5);
-    // appleBucket('d'); // drop apple bucket off
-    // drive(5, 'b');    // go back from apple bucket
-    // turn(100, 0);     // turn to allign with levers
-    
-    // INSERT SERVO MAX UP
-    // flipLever(l);      // flip lever
-    // while (!LCD.Touch(&x, &y)); // Wait for screen to be pressed
-    // while (LCD.Touch(&x, &y));  // Wait for screen to be unpressed
-    // turn(95, 1);
-    // Sleep(1.0);
-    // drive(3, 'f');
-    // Sleep(1.0);
-    // turn(95, 1);
-
-    // while (!LCD.Touch(&x, &y)); // Wait for screen to be pressed
-    // while (LCD.Touch(&x, &y));  // Wait for screen to be unpressed
-    // drive(7, 'b');
-    
-    // 0.26 for red, 0.4-0.5 for blue
+    // drive(6.3, 'b');
+    // turnOneOnly(180, 1);
+    // driveVariableSpeed(5, 'b', 40);
 
 }
 
