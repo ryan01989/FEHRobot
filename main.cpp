@@ -8,7 +8,7 @@
 
 // Can change the following if one motor is slower than another.
 #define LEFT_MOTOR_CORRECTION_FACTOR 1.01
-#define RIGHT_MOTOR_CORRECTION_FACTOR 1
+#define RIGHT_MOTOR_CORRECTION_FACTOR 0.99
 
 // Set a motor percentage of no more than 50% power
 #define MOTOR_PERCENTAGE 11.5 / (Battery.Voltage()) * 25
@@ -172,7 +172,7 @@ void driveUsingLine(float distance){
         switch(state) {
             // If I am in the middle of the line...
             case MIDDLE:
-                left_motor.SetPercent(15);
+                left_motor.SetPercent(-15);
                 right_motor.SetPercent(15);
                 /* Drive */
                 /* Code for if left sensor is on the line */
@@ -199,8 +199,8 @@ void driveUsingLine(float distance){
             // If the left sensor is on the line...
             case LEFT:
                 /* Mirror operation of RIGHT state */
-                left_motor.SetPercent(-15);
-                right_motor.SetPercent(0);
+                left_motor.SetPercent(0);
+                right_motor.SetPercent(15);
                 if(middle_opto.Value() < 3.05 && middle_opto.Value() > 2.95) {
                     state = MIDDLE;
                 }
@@ -472,27 +472,71 @@ int main(void)
 
     // while(cdsCell.Value() > 0.4);
 
-    right_motor.SetPercent(20);
-    Sleep(1.8);
-    right_motor.Stop();
-
-    drive(2.1, 'f');
-
-    left_motor.SetPercent(-20);
-    Sleep(0.9);
-    left_motor.Stop();
-
-    // drive(0.5, 'f');
-    Sleep(1.0);
-    drive(3.7, 'b');
-    turn(100, 1);
-    drive(7.5, 'f');
-    turn(95, 0);
+    // servoFork.SetPercent(-20);
+    // Sleep(5.0);
+    servoFork.SetPercent(50);
     Sleep(3.0);
+    servoFork.SetPercent(-30);
+    Sleep(3.0);
+    servoFork.Stop();
 
-    driveUsingLine(3);
 
-    
+    // FINAL CODE
+    // turn to compost
+
+
+    // right_motor.SetPercent(20);
+    // Sleep(1.8);
+    // right_motor.Stop();
+    // // drive there
+    // drive(2.1, 'f');
+    // // correct and straigthen
+    // left_motor.SetPercent(-20);
+    // Sleep(0.9);
+    // left_motor.Stop();
+    // // drive back
+    // Sleep(1.0);
+    // drive(3.4, 'b');
+    // // turn toward apple bucket and drive there
+    // turn(140, 1);
+    // drive(6.9, 'f');
+    // turn(144, 0);
+    // Sleep(3.0);
+    // driveVariableSpeed(2.0, 'f', 15);
+    // // driveUsingLine(3);
+
+    // Sleep(1.0);
+    // // turn and drive to hit wall then allign with ramp
+    // turn(55, 1);
+    // drive(3, 'b');
+    // turn(55, 0);
+    // driveVariableSpeed(7, 'b', 40);
+    // Sleep(0.5);
+    // drive(1.3, 'f');
+    // Sleep(0.5);
+    // turn(195, 1);
+
+    // // drive up ramp
+    // driveVariableSpeed(15, 'f', 40);
+
+    // drop apple bucket off
+    // appleBucket('d');
+
+    // turn and drive to levers
+    // driveVariableSpeed(2, 'b', 20);
+    // turn(55, 0);
+    // drive(7, 'f');
+    // Sleep(0.5);
+    // // flip lever stuff
+
+    // // drive back and align with humdifier
+    // drive(5, 'b');
+    // turn(55, 0);
+    // driveVariableSpeed(2.0, 'f', 20);
+    // humidifier();
+
+    // // drive back
+    // driveVariableSpeed(14, 'b', 40);
 
 
     // // humidifier first
