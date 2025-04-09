@@ -20,9 +20,8 @@ FEHMotor right_motor(FEHMotor::Motor1,9.0);
 FEHMotor left_motor(FEHMotor::Motor0,9.0);
 FEHMotor servoFork(FEHMotor::Motor2, 9.0);
 FEHServo servo(FEHServo::Servo3);
-AnalogInputPin sensorFront(FEHIO::P1_0);
-DigitalInputPin distanceSensor(FEHIO::P3_7);
-AnalogInputPin cdsCell(FEHIO::P3_0);
+AnalogInputPin sensorFront(FEHIO::P1_0); 
+AnalogInputPin cdsCell(FEHIO::P3_7);
 AnalogInputPin right_opto(FEHIO::P1_0);
 AnalogInputPin middle_opto(FEHIO::P1_2);
 AnalogInputPin left_opto(FEHIO::P1_4);
@@ -78,18 +77,6 @@ void turnOneOnly(int counts, int dir) //using encoders
     //Turn off motors
     right_motor.Stop();
     left_motor.Stop();
-}
-
-void driveUntilSensorDetected()
-{
-    // Drive backwards until an object is detected
-    left_motor.SetPercent(-1 * LEFT_MOTOR_CORRECTION_FACTOR * MOTOR_PERCENTAGE);
-    right_motor.SetPercent(-1 * RIGHT_MOTOR_CORRECTION_FACTOR * MOTOR_PERCENTAGE);
-
-    while (distanceSensor.Value()){}
-
-    left_motor.Stop();
-    right_motor.Stop();
 }
 
 void drive(float distance, char dir)
@@ -360,86 +347,13 @@ void spinServo(int n){
     
 }
 
-void humidifier(){
-    Sleep(0.5);
-    drive(3.5, 'f');
+void compost(){
     Sleep(1.0);
-    LCD.WriteLine("1st in");
-    spinServo(180);
-    Sleep(2.0);
-    drive(1.5, 'b');
-    Sleep(2.0);
-    LCD.WriteLine("1st out");
-    spinServo(0);
-    Sleep(2.0);
-    drive(1.5, 'f');
-    Sleep(2.0);
-    LCD.WriteLine("2nd in");
-    spinServo(180);
-    Sleep(2.0);
-    drive(1.5, 'b');
-    Sleep(2.0);
-    LCD.WriteLine("2nd out");
-    spinServo(0);
-    Sleep(2.0);
-    drive(1.5, 'f');
-    Sleep(2.0);
-    LCD.WriteLine("3rd in");
-    spinServo(180);
-    Sleep(2.0);
-    drive(1.5, 'b');
-    Sleep(2.0);
-    LCD.WriteLine("3rd out");
-    spinServo(0);
-    Sleep(2.0);
-    drive(1.5, 'f');
-    Sleep(2.0);
-    LCD.WriteLine("4th in");
-    spinServo(150);
-    Sleep(2.5);
-
-    // LCD.WriteLine("Going Back now.");
-    // LCD.WriteLine("1st in");
-    // spinServo(0);
-    // Sleep(2.0);
-    // drive(1.5, 'b');
-    // Sleep(2.0);
-    // LCD.WriteLine("1st out");
-    // spinServo(180);
-    // Sleep(2.0);
-    // drive(1.5, 'f');
-    // Sleep(2.0);
-    // LCD.WriteLine("2nd in");
-    // spinServo(0);
-    // Sleep(2.0);
-    // drive(1.5, 'b');
-    // Sleep(2.0);
-    // LCD.WriteLine("2nd out");
-    // spinServo(180);
-    // Sleep(2.0);
-    // drive(1.5, 'f');
-    // Sleep(2.0);
-    // LCD.WriteLine("3rd in");
-    // spinServo(0);
-    // Sleep(2.0);
-    // drive(1.5, 'b');
-    // Sleep(2.0);
-    // LCD.WriteLine("3rd out");
-    // spinServo(180);
-    // Sleep(2.0);
-    // drive(1.5, 'f');
-    // Sleep(2.0);
-    // LCD.WriteLine("4th in");
-    // spinServo(0);
-    // drive(1.5, 'b');
-    // Sleep(2.0);
-    // LCD.WriteLine("4th out");
-    // spinServo(180);
-    // Sleep(2.0);
-    // drive(1.5, 'f');
-    // Sleep(2.0);
-    // LCD.WriteLine("5th in");
-    // spinServo(0);
+    servoFork.SetPercent(-25);
+    Sleep(2.7);
+    servoFork.SetPercent(25);
+    Sleep(2.7);
+    servoFork.Stop();
 }
 
 int main(void)
@@ -470,59 +384,124 @@ int main(void)
     servo.SetMin(822);
     servo.SetMax(2208);
 
-    // while(cdsCell.Value() > 0.4);
+    servo.SetDegree(170);
+
+    while(cdsCell.Value() > 0.5);
+    
+    
 
     // servoFork.SetPercent(-20);
     // Sleep(5.0);
-    servoFork.SetPercent(50);
-    Sleep(3.0);
-    servoFork.SetPercent(-30);
-    Sleep(3.0);
-    servoFork.Stop();
+    // while(true){
+    //     // servoFork.SetPercent(40);
+    //     // Sleep(1.0);
+    //     // // servoFork.SetPercent(-40);
+    //     // Sleep(1.0);
+    //     // // servoFork.Stop();
+    //     // Sleep(5.0);
+        
+    //     LCD.WriteLine(cdsCell.Value());
+    //     Sleep(3.0);
+        
+    //     LCD.Clear();
+    // }
+    // servo.SetDegree(1);
+    // Sleep(5.0);
+    // LCD.WriteLine("turning");
+    // servo.SetDegree(179);
 
 
     // FINAL CODE
     // turn to compost
 
+    
+    driveVariableSpeed(0.6, 'b', 20);
+    right_motor.SetPercent(20);
+    Sleep(2.0);
+    right_motor.Stop();
+    // drive there
+    drive(2.23, 'f');
+    // correct and straigthen
+    left_motor.SetPercent(-20);
+    Sleep(1.0);
+    left_motor.Stop();
 
-    // right_motor.SetPercent(20);
-    // Sleep(1.8);
-    // right_motor.Stop();
-    // // drive there
-    // drive(2.1, 'f');
-    // // correct and straigthen
-    // left_motor.SetPercent(-20);
-    // Sleep(0.9);
-    // left_motor.Stop();
-    // // drive back
-    // Sleep(1.0);
-    // drive(3.4, 'b');
-    // // turn toward apple bucket and drive there
-    // turn(140, 1);
-    // drive(6.9, 'f');
-    // turn(144, 0);
-    // Sleep(3.0);
-    // driveVariableSpeed(2.0, 'f', 15);
-    // // driveUsingLine(3);
+    compost();
 
-    // Sleep(1.0);
-    // // turn and drive to hit wall then allign with ramp
-    // turn(55, 1);
-    // drive(3, 'b');
-    // turn(55, 0);
-    // driveVariableSpeed(7, 'b', 40);
-    // Sleep(0.5);
-    // drive(1.3, 'f');
-    // Sleep(0.5);
-    // turn(195, 1);
+    // drive back
+    Sleep(1.0);
+    drive(3.4, 'b');
+
+    // turn toward apple bucket and drive there
+    turn(139, 1);
+    drive(6.4, 'f');
+    turn(138, 0);
+    servo.SetDegree(74);
+    Sleep(3.0);
+    driveVariableSpeed(3.3, 'f', 15);
+    servo.SetDegree(140);
+    // driveUsingLine(3);
+
+    Sleep(1.0);
+    // turn and drive to hit wall then allign with ramp
+    drive(3.3, 'b');
+    driveVariableSpeed(6, 'b', 35);
+    Sleep(0.5);
+    driveVariableSpeed(1.3, 'f', 20);
+    Sleep(0.5);
+    turn(207, 1);
+    Sleep(1.0);
 
     // // drive up ramp
-    // driveVariableSpeed(15, 'f', 40);
+    driveVariableSpeed(9.5, 'f', 40);
 
-    // drop apple bucket off
+    // turn and drive to drop off apple bucket
+    Sleep(1.0);
+    turn(80, 0);
+    drive(5.9, 'f');
+    turn(80, 1);
+    drive(3.3, 'f');
+    servo.SetDegree(30);
+    Sleep(1.0);
+    drive(5.0, 'b');
+
+    // turn and flip levers
+    Sleep(1.0);
+    servo.SetDegree(170);
+    turn(80, 0);
+    drive(5.2, 'f');
+    servo.SetDegree(20);
+    Sleep(1.0);
+    drive(2.5, 'b');
+    Sleep(5.0);
+    servo.SetDegree(0);
+    drive(2.5, 'f');
+    servo.SetDegree(60);
+    Sleep(1.0);
+    drive(4, 'b');
+
+    // drive back and align with humidifier
+    servo.SetDegree(170);
+    Sleep(1.0);
+    drive(1.3, 'b');
+    turn(95, 0);
+    driveVariableSpeed(4, 'f', 20);
+    turn(410, 1);
+
+    while (true){
+        LCD.WriteLine(cdsCell.Value());
+        Sleep(0.8);
+        LCD.Clear();
+    }
+
+
+
+
+
+    // // drop apple bucket off
     // appleBucket('d');
 
-    // turn and drive to levers
+    // // turn and drive to levers
     // driveVariableSpeed(2, 'b', 20);
     // turn(55, 0);
     // drive(7, 'f');
@@ -533,9 +512,9 @@ int main(void)
     // drive(5, 'b');
     // turn(55, 0);
     // driveVariableSpeed(2.0, 'f', 20);
-    // humidifier();
+    // // humidifier();
 
-    // // drive back
+    // // // drive back
     // driveVariableSpeed(14, 'b', 40);
 
 
