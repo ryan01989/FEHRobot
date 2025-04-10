@@ -230,25 +230,25 @@ void pressHumidifier(){
         LCD.FillRectangle(0, 0, 355, 255);
     }
 
-    if (light == 'r'){
-        turn(191, 1);
-        drive(1.1, 'f');
-        turn(191, 0);
-        drive(5.2, 'f');
-        drive(1.0, 'b');
-        turn(191, 1);
-        drive(2.4, 'b');
-        turn(191, 0);
-    } else if (light == 'b'){
-        turn(191, 0);
-        drive(1.1, 'f');
-        turn(191, 1);
-        drive(5.2, 'f');
-        drive(1.0, 'b');
-        turn(191, 0);
-        drive(2.4, 'b');
-        turn(205, 1);
-    }
+    // if (light == 'r'){
+    //     turn(191, 1);
+    //     drive(1.1, 'f');
+    //     turn(191, 0);
+    //     drive(5.2, 'f');
+    //     drive(1.0, 'b');
+    //     turn(191, 1);
+    //     drive(2.4, 'b');
+    //     turn(191, 0);
+    // } else if (light == 'b'){
+    //     turn(191, 0);
+    //     drive(1.1, 'f');
+    //     turn(191, 1);
+    //     drive(5.2, 'f');
+    //     drive(1.0, 'b');
+    //     turn(191, 0);
+    //     drive(2.4, 'b');
+    //     turn(205, 1);
+    // }
 
 }
 
@@ -415,12 +415,18 @@ int main(void)
     // turn to compost
 
     
-    driveVariableSpeed(0.6, 'b', 20);
+    left_motor.SetPercent(20);
+    right_motor.SetPercent(-20);
+    Sleep(0.8);
+    left_motor.Stop();
+    right_motor.Stop();
+
+    // driveVariableSpeed(0.8, 'b', 20);
     right_motor.SetPercent(20);
     Sleep(2.0);
     right_motor.Stop();
     // drive there
-    drive(2.23, 'f');
+    drive(2.25, 'f');
     // correct and straigthen
     left_motor.SetPercent(-20);
     Sleep(1.0);
@@ -430,21 +436,21 @@ int main(void)
 
     // drive back
     Sleep(1.0);
-    drive(3.4, 'b');
+    drive(2.5, 'b');
 
     // turn toward apple bucket and drive there
-    turn(139, 1);
-    drive(6.4, 'f');
-    turn(138, 0);
+    turn(130, 1);
+    drive(6.7, 'f');
+    turn(137, 0);
     servo.SetDegree(74);
     Sleep(3.0);
-    driveVariableSpeed(3.3, 'f', 15);
-    servo.SetDegree(140);
+    driveVariableSpeed(2.3, 'f', 15);
+    servo.SetDegree(137);
     // driveUsingLine(3);
 
     Sleep(1.0);
     // turn and drive to hit wall then allign with ramp
-    drive(3.3, 'b');
+    drive(3.6, 'b');
     driveVariableSpeed(6, 'b', 35);
     Sleep(0.5);
     driveVariableSpeed(1.3, 'f', 20);
@@ -453,17 +459,24 @@ int main(void)
     Sleep(1.0);
 
     // // drive up ramp
-    driveVariableSpeed(9.5, 'f', 40);
+    driveVariableSpeed(9.8, 'f', 40);
 
     // turn and drive to drop off apple bucket
     Sleep(1.0);
     turn(80, 0);
-    drive(5.9, 'f');
-    turn(80, 1);
-    drive(3.3, 'f');
-    servo.SetDegree(30);
+    drive(6.4, 'f');
+    turn(78, 1);
+
+    right_motor.SetPercent(15);
+    left_motor.SetPercent(-15);
+    Sleep(3.0);
+    right_motor.Stop();
+    left_motor.Stop();
+
+    // drive(3.25, 'f');
+    servo.SetDegree(45);
     Sleep(1.0);
-    drive(5.0, 'b');
+    drive(5.3, 'b');
 
     // turn and flip levers
     Sleep(1.0);
@@ -483,18 +496,40 @@ int main(void)
     // drive back and align with humidifier
     servo.SetDegree(170);
     Sleep(1.0);
-    drive(1.3, 'b');
-    turn(95, 0);
-    driveVariableSpeed(4, 'f', 20);
-    turn(410, 1);
+    drive(1.1, 'b');
+    turn(100, 0);
+    driveVariableSpeed(3.4, 'f', 20);
+    Sleep(2.0);
+    pressHumidifier();
+
+    // turn around and press red button
+    turn(420, 1);
+    driveVariableSpeed(2.8, 'b', 20);
+
+    left_motor.SetPercent(15);
+    Sleep(0.8);
+    left_motor.SetPercent(-15);
+    Sleep(0.8);
+    left_motor.Stop();
+
+    // drive and turn to ram with wall. prepare for window
+    drive(8, 'f');
+    turn(420, 1);
+    
+    left_motor.SetPercent(20);
+    right_motor.SetPercent(-20);
+    Sleep(2.0);
+    left_motor.Stop();
+    right_motor.Stop();
+
+
+
 
     while (true){
         LCD.WriteLine(cdsCell.Value());
         Sleep(0.8);
         LCD.Clear();
     }
-
-
 
 
 
