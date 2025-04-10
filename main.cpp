@@ -229,7 +229,24 @@ void pressHumidifier(){
         LCD.DrawRectangle(0, 0, 355, 255);
         LCD.FillRectangle(0, 0, 355, 255);
     }
-
+    turn(420, 1);
+    driveVariableSpeed(2.8, 'b', 20);
+    if(light=='r'){
+        // turn around and press red button
+        left_motor.SetPercent(15);
+        Sleep(0.8);
+        drive(0.2, 'b');
+        left_motor.SetPercent(-15);
+        Sleep(0.8);
+        left_motor.Stop();
+    } else if(light=='b'){
+        right_motor.SetPercent(-15);
+        Sleep(0.8);
+        drive(0.2, 'b');
+        right_motor.SetPercent(15);
+        Sleep(0.8);
+        right_motor.Stop();
+    }
     // if (light == 'r'){
     //     turn(191, 1);
     //     drive(1.1, 'f');
@@ -358,8 +375,13 @@ void compost(){
 
 int main(void)
 {
+    // !!! change to actual name !!!
+    RCS.InitializeTouchMenu("0013252rfw");
+
     float x, y; //for touch screen
     int l = RCS.GetLever();
+
+
 
     LCD.WriteLine("Milestone 5");
     LCD.WriteLine("Touch the screen");
@@ -387,32 +409,6 @@ int main(void)
     servo.SetDegree(170);
 
     while(cdsCell.Value() > 0.5);
-    
-    
-
-    // servoFork.SetPercent(-20);
-    // Sleep(5.0);
-    // while(true){
-    //     // servoFork.SetPercent(40);
-    //     // Sleep(1.0);
-    //     // // servoFork.SetPercent(-40);
-    //     // Sleep(1.0);
-    //     // // servoFork.Stop();
-    //     // Sleep(5.0);
-        
-    //     LCD.WriteLine(cdsCell.Value());
-    //     Sleep(3.0);
-        
-    //     LCD.Clear();
-    // }
-    // servo.SetDegree(1);
-    // Sleep(5.0);
-    // LCD.WriteLine("turning");
-    // servo.SetDegree(179);
-
-
-    // FINAL CODE
-    // turn to compost
 
     
     left_motor.SetPercent(20);
@@ -473,8 +469,9 @@ int main(void)
     right_motor.Stop();
     left_motor.Stop();
 
-    // drive(3.25, 'f');
+    //drive(3.25, 'f');
     servo.SetDegree(45);
+    //402-493
     Sleep(1.0);
     drive(5.3, 'b');
 
@@ -482,48 +479,98 @@ int main(void)
     Sleep(1.0);
     servo.SetDegree(170);
     turn(80, 0);
-    drive(5.2, 'f');
+    //go and smack lever down
+    left_motor.SetPercent(-20);
+    right_motor.SetPercent(20);
+    Sleep(3.0);
+    left_motor.Stop();
+    right_motor.Stop();
     servo.SetDegree(20);
     Sleep(1.0);
+
+    //go smack it back up
     drive(2.5, 'b');
     Sleep(5.0);
     servo.SetDegree(0);
-    drive(2.5, 'f');
+    left_motor.SetPercent(-20);
+    right_motor.SetPercent(20);
+    Sleep(1.25);
+    left_motor.Stop();
+    right_motor.Stop();
     servo.SetDegree(60);
     Sleep(1.0);
     drive(4, 'b');
+    //if the lever hasn't been flipped, go back and flip it
+    if(RCS.isLeverFlipped()==0){
+        servo.SetDegree(170);
+        turn(20, 0);
+        //go and smack lever down
+        left_motor.SetPercent(-20);
+        right_motor.SetPercent(20);
+        Sleep(3.0);
+        left_motor.Stop();
+        right_motor.Stop();
+        servo.SetDegree(20);
+        Sleep(1.0);
+    
+        //go smack it back up
+        drive(2.5, 'b');
+        Sleep(5.0);
+        servo.SetDegree(0);
+        left_motor.SetPercent(-20);
+        right_motor.SetPercent(20);
+        Sleep(1.25);
+        left_motor.Stop();
+        right_motor.Stop();
+        servo.SetDegree(60);
+        Sleep(1.0);
+        drive(4, 'b');
+    }
 
     // drive back and align with humidifier
     servo.SetDegree(170);
     Sleep(1.0);
-    drive(1.1, 'b');
     turn(100, 0);
     driveVariableSpeed(3.4, 'f', 20);
     Sleep(2.0);
     pressHumidifier();
 
-    // turn around and press red button
-    turn(420, 1);
-    driveVariableSpeed(2.8, 'b', 20);
-
-    left_motor.SetPercent(15);
-    Sleep(0.8);
-    left_motor.SetPercent(-15);
-    Sleep(0.8);
-    left_motor.Stop();
+    
 
     // drive and turn to ram with wall. prepare for window
     drive(8, 'f');
     turn(420, 1);
-    
+    //open window (just keep driving forward and turning right)
     left_motor.SetPercent(20);
-    right_motor.SetPercent(-20);
-    Sleep(2.0);
+    right_motor.SetPercent(52);
+    Sleep(0.5);
     left_motor.Stop();
     right_motor.Stop();
-
-
-
+    
+    left_motor.SetPercent(-20);
+    right_motor.SetPercent(20);
+    Sleep(4.0);
+    left_motor.SetPercent(-50);
+    right_motor.SetPercent(-50);
+    Sleep(0.75);
+    left_motor.SetPercent(-50);
+    right_motor.SetPercent(50);
+    Sleep(2.0);
+    left_motor.SetPercent(-50);
+    right_motor.SetPercent(-50);
+    Sleep(0.75);
+    left_motor.SetPercent(-50);
+    right_motor.SetPercent(50);
+    Sleep(3.0);
+    left_motor.Stop();
+    right_motor.Stop();
+    
+    //go back to final button
+    drive(10, 'b');
+    //turn right so robot is backward
+    turn(207, 1);
+    //go allll the way back
+    drive(15, 'b');
 
     while (true){
         LCD.WriteLine(cdsCell.Value());
