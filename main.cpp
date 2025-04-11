@@ -99,13 +99,8 @@ void drive(float distance, char dir)
 
     //While the average of the left and right encoder is less than counts,
     //keep running motors
-    while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts ){
-        // LCD.WriteLine("LEFT:");
-        // LCD.WriteLine(left_encoder.Counts());
-        // LCD.WriteLine("RIGHT:");
-        // LCD.WriteLine(right_encoder.Counts());
-        // Sleep(0.5);
-    }
+    double start = TimeNow();
+    while(((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts) && (TimeNow() - start) < 8.0){}
 
     //Turn off motors
     right_motor.Stop();
@@ -132,7 +127,8 @@ void driveVariableSpeed(float distance, char dir, float percentage)
 
     //While the average of the left and right encoder is less than counts,
     //keep running motors
-    while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts ){
+    double start = TimeNow();
+    while(((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts) && (TimeNow() - start) < 8.0){
         // LCD.WriteLine("LEFT:");
         // LCD.WriteLine(left_encoder.Counts());
         // LCD.WriteLine("RIGHT:");
@@ -419,13 +415,13 @@ int main(void)
 
     // driveVariableSpeed(0.8, 'b', 20);
     right_motor.SetPercent(20);
-    Sleep(2.0);
+    Sleep(2.1);
     right_motor.Stop();
     // drive there
     drive(2.25, 'f');
     // correct and straigthen
     left_motor.SetPercent(-20);
-    Sleep(1.0);
+    Sleep(0.9);
     left_motor.Stop();
 
     compost();
@@ -437,21 +433,20 @@ int main(void)
     // turn toward apple bucket and drive there
     turn(130, 1);
     drive(6.7, 'f');
-    turn(137, 0);
+    turn(135, 0);
     servo.SetDegree(74);
-    Sleep(3.0);
-    driveVariableSpeed(2.3, 'f', 15);
+    Sleep(2.0);
+    driveVariableSpeed(2.0, 'f', 15);
     servo.SetDegree(137);
-    // driveUsingLine(3);
 
     Sleep(1.0);
     // turn and drive to hit wall then allign with ramp
-    drive(3.6, 'b');
+    drive(3.9, 'b');
     driveVariableSpeed(6, 'b', 35);
     Sleep(0.5);
     driveVariableSpeed(1.3, 'f', 20);
     Sleep(0.5);
-    turn(207, 1);
+    turn(209, 1);
     Sleep(1.0);
 
     // // drive up ramp
@@ -460,8 +455,8 @@ int main(void)
     // turn and drive to drop off apple bucket
     Sleep(1.0);
     turn(80, 0);
-    drive(6.4, 'f');
-    turn(78, 1);
+    drive(6.5, 'f');
+    turn(80, 1);
 
     right_motor.SetPercent(15);
     left_motor.SetPercent(-15);
@@ -479,98 +474,116 @@ int main(void)
     Sleep(1.0);
     servo.SetDegree(170);
     turn(80, 0);
+
     //go and smack lever down
     left_motor.SetPercent(-20);
     right_motor.SetPercent(20);
-    Sleep(3.0);
+    Sleep(2.4);
     left_motor.Stop();
     right_motor.Stop();
     servo.SetDegree(20);
-    Sleep(1.0);
+    Sleep(3.0);
 
-    //go smack it back up
-    drive(2.5, 'b');
-    Sleep(5.0);
-    servo.SetDegree(0);
-    left_motor.SetPercent(-20);
-    right_motor.SetPercent(20);
-    Sleep(1.25);
-    left_motor.Stop();
-    right_motor.Stop();
-    servo.SetDegree(60);
-    Sleep(1.0);
-    drive(4, 'b');
-    //if the lever hasn't been flipped, go back and flip it
     if(RCS.isLeverFlipped()==0){
         servo.SetDegree(170);
         turn(20, 0);
         //go and smack lever down
         left_motor.SetPercent(-20);
         right_motor.SetPercent(20);
-        Sleep(3.0);
+        Sleep(2.4);
         left_motor.Stop();
         right_motor.Stop();
         servo.SetDegree(20);
         Sleep(1.0);
     
-        //go smack it back up
-        drive(2.5, 'b');
-        Sleep(5.0);
-        servo.SetDegree(0);
-        left_motor.SetPercent(-20);
-        right_motor.SetPercent(20);
-        Sleep(1.25);
-        left_motor.Stop();
-        right_motor.Stop();
-        servo.SetDegree(60);
-        Sleep(1.0);
-        drive(4, 'b');
     }
+
+    //go smack it back up
+    drive(2.5, 'b');
+    Sleep(4.8);
+    servo.SetDegree(0);
+    left_motor.SetPercent(-20);
+    right_motor.SetPercent(20);
+    Sleep(1.7);
+    left_motor.Stop();
+    right_motor.Stop();
+    servo.SetDegree(60);
+    Sleep(1.0);
+    drive(4, 'b');
+
+    //if the lever hasn't been flipped, go back and flip it
+    
 
     // drive back and align with humidifier
     servo.SetDegree(170);
     Sleep(1.0);
-    turn(100, 0);
-    driveVariableSpeed(3.4, 'f', 20);
-    Sleep(2.0);
+    turn(93, 0);
+    drive(3, 'f');
     pressHumidifier();
+    // left_motor.SetPercent(-20);
+    // right_motor.SetPercent(20);
+    // Sleep(4.0);
+    // left_motor.Stop();
+    // right_motor.Stop();
 
-    
+
+    Sleep(2.0);
 
     // drive and turn to ram with wall. prepare for window
-    drive(8, 'f');
-    turn(420, 1);
-    //open window (just keep driving forward and turning right)
-    left_motor.SetPercent(20);
-    right_motor.SetPercent(52);
-    Sleep(0.5);
+    left_motor.SetPercent(-15);
+    Sleep(0.6);
     left_motor.Stop();
-    right_motor.Stop();
+
+    drive(7, 'f');
     
-    left_motor.SetPercent(-20);
-    right_motor.SetPercent(20);
-    Sleep(4.0);
-    left_motor.SetPercent(-50);
-    right_motor.SetPercent(-50);
-    Sleep(0.75);
-    left_motor.SetPercent(-50);
-    right_motor.SetPercent(50);
-    Sleep(2.0);
-    left_motor.SetPercent(-50);
-    right_motor.SetPercent(-50);
-    Sleep(0.75);
-    left_motor.SetPercent(-50);
-    right_motor.SetPercent(50);
+    turn(430, 1);
+    left_motor.SetPercent(20);
+    right_motor.SetPercent(-20);
     Sleep(3.0);
     left_motor.Stop();
     right_motor.Stop();
+
+    //open window (just keep driving forward and turning right)
+    drive(4, 'f');
+    Sleep(2.0);
+    left_motor.SetPercent(-20);
+    right_motor.SetPercent(20);
+    Sleep(1.0);
+    left_motor.Stop();
+    right_motor.Stop();
+    left_motor.SetPercent(-30);
+    right_motor.SetPercent(20);
+    Sleep(2.8);
+    left_motor.Stop();
+    right_motor.Stop();
+
+    // left_motor.SetPercent(-20);
+    // right_motor.SetPercent(20);
+    // Sleep(4.0);
+    // left_motor.SetPercent(-50);
+    // right_motor.SetPercent(-50);
+    // Sleep(0.75);
+    // left_motor.SetPercent(-50);
+    // right_motor.SetPercent(50);
+    // Sleep(2.0);
+    // left_motor.SetPercent(-50);
+    // right_motor.SetPercent(-50);
+    // Sleep(0.75);
+    // left_motor.SetPercent(-50);
+    // right_motor.SetPercent(50);
+    // Sleep(3.0);
+    // left_motor.Stop();
+    // right_motor.Stop();
     
     //go back to final button
     drive(10, 'b');
+    drive(1.5, 'f');
     //turn right so robot is backward
-    turn(207, 1);
+    turn(225, 1);
     //go allll the way back
     drive(15, 'b');
+    turn(50, 0);
+    drive(2, 'b');
 
     while (true){
         LCD.WriteLine(cdsCell.Value());
