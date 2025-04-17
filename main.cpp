@@ -49,7 +49,31 @@ void turn(int counts, int dir) //using encoders
     }
     // While the average of the left and right encoder is less than counts,
     // keep running motors
-    while(left_encoder.Counts() < counts);
+    double start = TimeNow();
+    while((left_encoder.Counts() < counts)  && (TimeNow() - start) < 4.0);
+
+    //Turn off motors
+    right_motor.Stop();
+    left_motor.Stop();
+}
+
+void turnVariable(int counts, int dir, float motorFactorLeft, float motorFactorRight) //using encoders
+{
+    //Reset encoder counts
+    right_encoder.ResetCounts();
+    left_encoder.ResetCounts();
+    //Set both motors to desired percent
+    if (dir == 0) {
+        right_motor.SetPercent(MOTOR_PERCENTAGE*motorFactorRight);
+        left_motor.SetPercent(MOTOR_PERCENTAGE*motorFactorLeft);
+    } else {
+        right_motor.SetPercent(-MOTOR_PERCENTAGE*motorFactorRight);
+        left_motor.SetPercent(-MOTOR_PERCENTAGE*motorFactorLeft);
+    }
+    // While the average of the left and right encoder is less than counts,
+    // keep running motors
+    double start = TimeNow();
+    while((left_encoder.Counts() < counts)  && (TimeNow() - start) < 4.0);
 
     //Turn off motors
     right_motor.Stop();
@@ -202,7 +226,7 @@ void driveUsingLine(float distance){
 
 void pressHumidifier(){
     // 0.26 for red, 0.5 for blue
-    char light = 'r';
+    char light = 's';
     int i;
     Sleep(2.0);
     LCD.SetFontColor(RED);
@@ -225,43 +249,13 @@ void pressHumidifier(){
         LCD.DrawRectangle(0, 0, 355, 255);
         LCD.FillRectangle(0, 0, 355, 255);
     }
-    turn(420, 1);
-    driveVariableSpeed(2.8, 'b', 20);
-    if(light=='r'){
-        // turn around and press red button
-        left_motor.SetPercent(15);
-        Sleep(0.8);
-        drive(0.2, 'b');
-        left_motor.SetPercent(-15);
-        Sleep(0.8);
-        left_motor.Stop();
-    } else if(light=='b'){
-        right_motor.SetPercent(-15);
-        Sleep(0.8);
-        drive(0.2, 'b');
-        right_motor.SetPercent(15);
-        Sleep(0.8);
-        right_motor.Stop();
-    }
-    // if (light == 'r'){
-    //     turn(191, 1);
-    //     drive(1.1, 'f');
-    //     turn(191, 0);
-    //     drive(5.2, 'f');
-    //     drive(1.0, 'b');
-    //     turn(191, 1);
-    //     drive(2.4, 'b');
-    //     turn(191, 0);
-    // } else if (light == 'b'){
-    //     turn(191, 0);
-    //     drive(1.1, 'f');
-    //     turn(191, 1);
-    //     drive(5.2, 'f');
-    //     drive(1.0, 'b');
-    //     turn(191, 0);
-    //     drive(2.4, 'b');
-    //     turn(205, 1);
-    // }
+    turn(427, 1);
+
+    left_motor.SetPercent(20);
+    right_motor.SetPercent(-20);
+    Sleep(3.0);
+    left_motor.Stop();
+    right_motor.Stop();
 
 }
 
@@ -363,62 +357,45 @@ void spinServo(int n){
 void compost(){
     Sleep(1.0);
     servoFork.SetPercent(-25);
-    Sleep(2.7);
+    Sleep(2.9);
     servoFork.SetPercent(25);
-    Sleep(2.7);
+    Sleep(2.9);
     servoFork.Stop();
 }
 
 int main(void)
 {
-    // !!! change to actual name !!!
-    RCS.InitializeTouchMenu("0013252rfw");
+    // RCS.InitializeTouchMenu("0150F7IJN");
 
     float x, y; //for touch screen
     int l = RCS.GetLever();
 
-
-
     LCD.WriteLine("Milestone 5");
     LCD.WriteLine("Touch the screen");
-    // while(!LCD.Touch(&x,&y)); //Wait for screen to be pressed
-    // while(LCD.Touch(&x,&y)); //Wait for screen to be unpressed
-
-    // ******* MILESTONE 5 **********
-
-    // while (true){
-    //     LCD.WriteLine(left_opto.Value());
-    //     LCD.WriteLine(middle_opto.Value());
-    //     LCD.WriteLine(right_opto.Value());
-
-    //     Sleep(1.0);
-    //     LCD.Clear();
     
-    // }
-
-    // driveUsingLine(3);
-    
-    // servo.TouchCalibrate();
     servo.SetMin(822);
     servo.SetMax(2208);
 
     servo.SetDegree(170);
 
+    // wait for starting light
     while(cdsCell.Value() > 0.5);
 
-    
+    // press start button
     left_motor.SetPercent(20);
     right_motor.SetPercent(-20);
     Sleep(0.8);
     left_motor.Stop();
     right_motor.Stop();
 
-    // driveVariableSpeed(0.8, 'b', 20);
+    // turn toward compost bin
     right_motor.SetPercent(20);
-    Sleep(2.1);
+    Sleep(2.05);
     right_motor.Stop();
+
     // drive there
-    drive(2.25, 'f');
+    drive(2.3, 'f');
+
     // correct and straigthen
     left_motor.SetPercent(-20);
     Sleep(0.9);
@@ -432,41 +409,39 @@ int main(void)
 
     // turn toward apple bucket and drive there
     turn(130, 1);
-    drive(6.7, 'f');
+    drive(6.65, 'f');
     turn(135, 0);
     servo.SetDegree(74);
     Sleep(2.0);
-    driveVariableSpeed(2.0, 'f', 15);
+    driveVariableSpeed(2.1, 'f', 15);
     servo.SetDegree(137);
-
     Sleep(1.0);
+
     // turn and drive to hit wall then allign with ramp
     drive(3.9, 'b');
     driveVariableSpeed(6, 'b', 35);
     Sleep(0.5);
     driveVariableSpeed(1.3, 'f', 20);
     Sleep(0.5);
-    turn(209, 1);
-    Sleep(1.0);
+    turn(212, 1);
 
-    // // drive up ramp
+    // drive up ramp
     driveVariableSpeed(9.8, 'f', 40);
 
     // turn and drive to drop off apple bucket
     Sleep(1.0);
-    turn(80, 0);
-    drive(6.5, 'f');
-    turn(80, 1);
-
+    
+    turn(85, 0);
+    drive(7.1, 'f');
+    turn(83, 1);
+    // drive toward crate
     right_motor.SetPercent(15);
     left_motor.SetPercent(-15);
-    Sleep(3.0);
+    Sleep(3.3);
     right_motor.Stop();
     left_motor.Stop();
-
-    //drive(3.25, 'f');
+    // drop off
     servo.SetDegree(45);
-    //402-493
     Sleep(1.0);
     drive(5.3, 'b');
 
@@ -475,7 +450,7 @@ int main(void)
     servo.SetDegree(170);
     turn(80, 0);
 
-    //go and smack lever down
+    // go and smack lever down
     left_motor.SetPercent(-20);
     right_motor.SetPercent(20);
     Sleep(2.4);
@@ -484,165 +459,92 @@ int main(void)
     servo.SetDegree(20);
     Sleep(3.0);
 
-    if(RCS.isLeverFlipped()==0){
-        servo.SetDegree(170);
-        turn(20, 0);
-        //go and smack lever down
-        left_motor.SetPercent(-20);
-        right_motor.SetPercent(20);
-        Sleep(2.4);
-        left_motor.Stop();
-        right_motor.Stop();
-        servo.SetDegree(20);
-        Sleep(1.0);
-    
-    }
-
-    //go smack it back up
     drive(2.5, 'b');
-    Sleep(4.8);
+    Sleep(1.0);
+
+    //if the lever hasn't been flipped, go back and flip it
+    // if(RCS.isLeverFlipped()==0){
+    //     drive(2.5, 'f');
+    //     servo.SetDegree(170);
+    //     turn(20, 0);
+    //     //go and smack lever down
+    //     left_motor.SetPercent(-20);
+    //     right_motor.SetPercent(20);
+    //     Sleep(2.4);
+    //     left_motor.Stop();
+    //     right_motor.Stop();
+    //     servo.SetDegree(20);
+    //     Sleep(1.0);
+    
+    // }
+
+    // go smack it back up
+    Sleep(4.0);
     servo.SetDegree(0);
     left_motor.SetPercent(-20);
     right_motor.SetPercent(20);
-    Sleep(1.7);
+    Sleep(1.5);
     left_motor.Stop();
     right_motor.Stop();
     servo.SetDegree(60);
     Sleep(1.0);
-    drive(4, 'b');
-
-    //if the lever hasn't been flipped, go back and flip it
+    drive(4.3, 'b');
     
 
     // drive back and align with humidifier
     servo.SetDegree(170);
     Sleep(1.0);
-    turn(93, 0);
+    turn(95, 0);
     drive(3, 'f');
     pressHumidifier();
-    // left_motor.SetPercent(-20);
-    // right_motor.SetPercent(20);
-    // Sleep(4.0);
+
+    Sleep(2.0);
+
+    // // turn a little to press button
+    // left_motor.SetPercent(15);
+    // Sleep(1.0);
     // left_motor.Stop();
-    // right_motor.Stop();
+    // Sleep(0.5);
+    // left_motor.SetPercent(-15);
+    // Sleep(1.0);
+    // left_motor.Stop();
 
 
-    Sleep(2.0);
-
-    // drive and turn to ram with wall. prepare for window
-    left_motor.SetPercent(-15);
-    Sleep(0.6);
-    left_motor.Stop();
-
-    drive(7, 'f');
+    drive(2.7, 'f');
     
-    turn(430, 1);
-    left_motor.SetPercent(20);
-    right_motor.SetPercent(-20);
-    Sleep(3.0);
-    left_motor.Stop();
-    right_motor.Stop();
-
-    //open window (just keep driving forward and turning right)
-    drive(4, 'f');
-    Sleep(2.0);
+    turn(205, 1);
+    
     left_motor.SetPercent(-20);
     right_motor.SetPercent(20);
-    Sleep(1.0);
-    left_motor.Stop();
-    right_motor.Stop();
-    left_motor.SetPercent(-30);
-    right_motor.SetPercent(20);
-    Sleep(2.8);
+    Sleep(2.0);
     left_motor.Stop();
     right_motor.Stop();
 
-    // left_motor.SetPercent(-20);
-    // right_motor.SetPercent(20);
-    // Sleep(4.0);
-    // left_motor.SetPercent(-50);
-    // right_motor.SetPercent(-50);
-    // Sleep(0.75);
-    // left_motor.SetPercent(-50);
-    // right_motor.SetPercent(50);
+    turnVariable(215, 1, 1.7, 1.7);
+
+    // left_motor.SetPercent(-30);
+    // right_motor.SetPercent(30);
     // Sleep(2.0);
-    // left_motor.SetPercent(-50);
-    // right_motor.SetPercent(-50);
-    // Sleep(0.75);
-    // left_motor.SetPercent(-50);
-    // right_motor.SetPercent(50);
-    // Sleep(3.0);
     // left_motor.Stop();
     // right_motor.Stop();
+    // turn(205, 1);
     
+    // turn toward wall
+    driveVariableSpeed(1.3, 'b', 20);
+    Sleep(1.0);
+    turn(70, 1);
+
+    
+    Sleep(1.0);
     //go back to final button
-    drive(10, 'b');
-    drive(1.5, 'f');
+    drive(11, 'b');
+    drive(1.7, 'f');
     //turn right so robot is backward
-    turn(225, 1);
+    turn(228, 1);
     //go allll the way back
-    drive(15, 'b');
+    drive(16, 'b');
     turn(50, 0);
     drive(2, 'b');
-
-    while (true){
-        LCD.WriteLine(cdsCell.Value());
-        Sleep(0.8);
-        LCD.Clear();
-    }
-
-
-
-    // // drop apple bucket off
-    // appleBucket('d');
-
-    // // turn and drive to levers
-    // driveVariableSpeed(2, 'b', 20);
-    // turn(55, 0);
-    // drive(7, 'f');
-    // Sleep(0.5);
-    // // flip lever stuff
-
-    // // drive back and align with humdifier
-    // drive(5, 'b');
-    // turn(55, 0);
-    // driveVariableSpeed(2.0, 'f', 20);
-    // // humidifier();
-
-    // // // drive back
-    // driveVariableSpeed(14, 'b', 40);
-
-
-    // // humidifier first
-    // humidifier();
-
-    // // back out and drive to apple bucket
-
-    // // pick up apple bucket
-    // appleBucket('p');
-
-    // // back up and allign with ramp
-
-    // // drive up ramp
-
-    // // drop off apple bucket
-    // appleBucket('d');
-
-    // // back up and drive to levers
-    
-    // // flip lever
-    // flipLever(l);
-
-    // // back up and drive to humidifier button
-
-    // // press humidifier button
-    // humidifier();
-
-    // Sleep(2.5);
-
-    // drive(6.3, 'b');
-    // turnOneOnly(180, 1);
-    // driveVariableSpeed(5, 'b', 40);
 
 }
 
